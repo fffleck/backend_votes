@@ -7,6 +7,21 @@ import routes from "./routes"
 
 const app = express()
 
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://votacao-minas.vercel.app"
+  ],
+  credentials: true
+}))
+
+app.get("/", (req, res) => {
+  res.json({
+    status: "online",
+    message: "API funcionando"
+  })
+})
+
 const uploadsDir = path.join(__dirname, "..", "uploads")
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
