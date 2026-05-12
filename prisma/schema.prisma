@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  cpf          String?  @unique
+  passwordHash String
+  role         String   @default("VOTER")
+  createdAt    DateTime @default(now())
+  active       Boolean  @default(true)
+}
+
+model PreRegisteredUser {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  cpf       String   @unique
+  status    String   @default("apto")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Voting {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("draft")
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  startDate   DateTime?
+  endDate     DateTime?
+
+  steps       VotingStep[]
+  votes       Vote[]
+}
+
+
+model Vote {
+  id            String   @id @default(uuid())
+  userId        String
+  votingId      String
+
+  encryptedVote String
+  voteHash      String
+
+  createdAt     DateTime @default(now())
+
+  voting        Voting @relation(fields: [votingId], references: [id])
+
+  @@unique([userId, votingId])
+}
+
+model VotingStep {
+  id        String   @id @default(uuid())
+  votingId  String
+  title     String
+  type      String   // "single" | "multiple"
+  minSelect Int
+  maxSelect Int
+
+  options   VotingStepOption[]
+
+  voting    Voting @relation(fields: [votingId], references: [id])
+}
+
+
+model VotingStepOption {
+  id       String  @id @default(uuid())
+  stepId   String
+  label    String
+  imageUrl String?
+
+  step     VotingStep @relation(fields: [stepId], references: [id])
+}

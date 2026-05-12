@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const users_controller_1 = require("./users.controller");
+const auth_1 = require("../../middlewares/auth");
+const router = (0, express_1.Router)();
+const controller = new users_controller_1.UsersController();
+router.use(auth_1.authMiddleware);
+router.get("/pre-registered", controller.listPreRegistered);
+router.post("/pre-registered", controller.createPreRegistered);
+router.put("/pre-registered/:id", controller.updatePreRegistered);
+router.get("/", controller.list);
+router.delete("/:userId", controller.deactivate);
+exports.default = router;
