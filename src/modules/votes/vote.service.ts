@@ -85,15 +85,30 @@ export class VoteService {
     const parsedVotes = votes.map(v => {
       try {
         const decrypted = JSON.parse(decrypt(v.encryptedVote))
-        return decrypted.answers
+        return {
+          answers: decrypted.answers,
+          createdAt: v.createdAt
+        }
       } catch {
         return null
       }
     }).filter(Boolean)
 
+    const timeline = new Map<string, number>()
+
+    parsedVotes.forEach(vote => {
+      const hour = new Date(vote!.createdAt)
+      hour.setMinutes(0, 0, 0)
+      const key = hour.toISOString()
+      timeline.set(key, (timeline.get(key) || 0) + 1)
+    })
+
     return {
       totalVotes: parsedVotes.length,
-      votes: parsedVotes
+      votes: parsedVotes.map(vote => vote!.answers),
+      voteTimeline: [...timeline.entries()]
+        .map(([hour, count]) => ({ hour, count }))
+        .sort((a, b) => new Date(a.hour).getTime() - new Date(b.hour).getTime())
     }
   }
 }
