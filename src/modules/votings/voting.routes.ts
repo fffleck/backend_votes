@@ -10,6 +10,7 @@ router.use(authMiddleware)
 router.post("/", controller.create)
 router.get("/", controller.list)
 router.get("/:id", controller.findById)
+router.patch("/:id", controller.update)
 
 router.post("/:id/open", controller.open)
 router.post("/:id/close", controller.close)
