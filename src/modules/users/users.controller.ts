@@ -19,6 +19,17 @@ export class UsersController {
     return res.json(users)
   }
 
+  async create(req: AuthRequest, res: Response) {
+    try {
+      if (!ensureAdmin(req, res)) return
+      const { name, email, cpf, password } = req.body
+      const user = await service.create({ name, email, cpf, password })
+      return res.json(user)
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message })
+    }
+  }
+
   async deactivate(req: AuthRequest, res: Response) {
     if (!ensureAdmin(req, res)) return
     let { userId } = req.params
@@ -27,31 +38,14 @@ export class UsersController {
     return res.json({ success: true })
   }
 
-  async listPreRegistered(req: AuthRequest, res: Response) {
-    if (!ensureAdmin(req, res)) return
-    const users = await service.listPreRegistered()
-    return res.json(users)
-  }
-
-  async createPreRegistered(req: AuthRequest, res: Response) {
+  async updatePassword(req: AuthRequest, res: Response) {
     try {
       if (!ensureAdmin(req, res)) return
-      const { name, email, cpf, status } = req.body
-      const user = await service.createPreRegistered({ name, email, cpf, status })
-      return res.json(user)
-    } catch (err: any) {
-      return res.status(400).json({ error: err.message })
-    }
-  }
-
-  async updatePreRegistered(req: AuthRequest, res: Response) {
-    try {
-      if (!ensureAdmin(req, res)) return
-      let { id } = req.params
-      if (Array.isArray(id)) id = id[0]
-      const { name, email, cpf, status } = req.body
-      const user = await service.updatePreRegistered(id.toString(), { name, email, cpf, status })
-      return res.json(user)
+      let { userId } = req.params
+      if (Array.isArray(userId)) userId = userId[0]
+      const { password } = req.body
+      const result = await service.updatePassword(userId.toString(), password)
+      return res.json(result)
     } catch (err: any) {
       return res.status(400).json({ error: err.message })
     }

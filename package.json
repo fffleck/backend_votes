@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts",
     "import:pre-registered": "ts-node scripts/importPreRegisteredUsers.ts",
+    "migrate:pre-registered-to-users": "ts-node scripts/migratePreRegisteredToUsers.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

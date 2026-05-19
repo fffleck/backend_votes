@@ -7,11 +7,9 @@ const controller = new UsersController()
 
 router.use(authMiddleware)
 
-router.get("/pre-registered", controller.listPreRegistered)
-router.post("/pre-registered", controller.createPreRegistered)
-router.put("/pre-registered/:id", controller.updatePreRegistered)
-
 router.get("/", controller.list)
+router.post("/", controller.create)
+router.patch("/:userId/password", controller.updatePassword)
 router.delete("/:userId", controller.deactivate)
 
 export default router
