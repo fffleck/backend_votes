@@ -1,7 +1,10 @@
 import { prisma } from "../../config/prisma"
 import { hashPassword } from "../../providers/hash"
+import { InvitationEmailService } from "../emails/invitationEmail.service"
 
 export class UsersService {
+  private invitationEmailService = new InvitationEmailService()
+
   private normalizeCpf(cpf: string) {
     return String(cpf || "").replace(/\D/g, "")
   }
@@ -122,5 +125,75 @@ export class UsersService {
     })
 
     return { success: true }
+  }
+
+  async sendInvitation(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        role: true,
+        active: true
+      }
+    })
+
+    if (!user || !user.active) throw new Error("Usuário não encontrado")
+    if (user.role === "ADMIN") throw new Error("Convite disponível apenas para usuários votantes")
+    if (!user.cpf) throw new Error("Usuário sem CPF cadastrado")
+
+    await this.invitationEmailService.sendInvitation({
+      name: user.name,
+      email: user.email,
+      cpf: user.cpf
+    })
+
+    return { success: true }
+  }
+
+  async sendInvitationsToAllVoters() {
+    const users = await prisma.user.findMany({
+      where: {
+        active: true,
+        role: "VOTER",
+        cpf: { not: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true
+      },
+      orderBy: { name: "asc" }
+    })
+
+    const result = {
+      total: users.length,
+      sent: 0,
+      failed: 0,
+      failures: [] as { userId: string; email: string; error: string }[]
+    }
+
+    for (const user of users) {
+      try {
+        await this.invitationEmailService.sendInvitation({
+          name: user.name,
+          email: user.email,
+          cpf: user.cpf
+        })
+        result.sent++
+      } catch (error: any) {
+        result.failed++
+        result.failures.push({
+          userId: user.id,
+          email: user.email,
+          error: error.message || "Erro ao enviar email"
+        })
+      }
+    }
+
+    return result
   }
 }

@@ -50,4 +50,26 @@ export class UsersController {
       return res.status(400).json({ error: err.message })
     }
   }
+
+  async sendInvitation(req: AuthRequest, res: Response) {
+    try {
+      if (!ensureAdmin(req, res)) return
+      let { userId } = req.params
+      if (Array.isArray(userId)) userId = userId[0]
+      const result = await service.sendInvitation(userId.toString())
+      return res.json(result)
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message })
+    }
+  }
+
+  async sendInvitationsToAllVoters(req: AuthRequest, res: Response) {
+    try {
+      if (!ensureAdmin(req, res)) return
+      const result = await service.sendInvitationsToAllVoters()
+      return res.json(result)
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message })
+    }
+  }
 }
