@@ -17,6 +17,18 @@ class UsersController {
         const users = await service.list();
         return res.json(users);
     }
+    async create(req, res) {
+        try {
+            if (!ensureAdmin(req, res))
+                return;
+            const { name, email, cpf, password } = req.body;
+            const user = await service.create({ name, email, cpf, password });
+            return res.json(user);
+        }
+        catch (err) {
+            return res.status(400).json({ error: err.message });
+        }
+    }
     async deactivate(req, res) {
         if (!ensureAdmin(req, res))
             return;
@@ -26,34 +38,41 @@ class UsersController {
         await service.deactivate(userId.toString());
         return res.json({ success: true });
     }
-    async listPreRegistered(req, res) {
-        if (!ensureAdmin(req, res))
-            return;
-        const users = await service.listPreRegistered();
-        return res.json(users);
-    }
-    async createPreRegistered(req, res) {
+    async updatePassword(req, res) {
         try {
             if (!ensureAdmin(req, res))
                 return;
-            const { name, email, cpf, status } = req.body;
-            const user = await service.createPreRegistered({ name, email, cpf, status });
-            return res.json(user);
+            let { userId } = req.params;
+            if (Array.isArray(userId))
+                userId = userId[0];
+            const { password } = req.body;
+            const result = await service.updatePassword(userId.toString(), password);
+            return res.json(result);
         }
         catch (err) {
             return res.status(400).json({ error: err.message });
         }
     }
-    async updatePreRegistered(req, res) {
+    async sendInvitation(req, res) {
         try {
             if (!ensureAdmin(req, res))
                 return;
-            let { id } = req.params;
-            if (Array.isArray(id))
-                id = id[0];
-            const { name, email, cpf, status } = req.body;
-            const user = await service.updatePreRegistered(id.toString(), { name, email, cpf, status });
-            return res.json(user);
+            let { userId } = req.params;
+            if (Array.isArray(userId))
+                userId = userId[0];
+            const result = await service.sendInvitation(userId.toString());
+            return res.json(result);
+        }
+        catch (err) {
+            return res.status(400).json({ error: err.message });
+        }
+    }
+    async sendInvitationsToAllVoters(req, res) {
+        try {
+            if (!ensureAdmin(req, res))
+                return;
+            const result = await service.sendInvitationsToAllVoters();
+            return res.json(result);
         }
         catch (err) {
             return res.status(400).json({ error: err.message });

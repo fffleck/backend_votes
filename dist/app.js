@@ -10,6 +10,24 @@ const fs_1 = __importDefault(require("fs"));
 const multer_1 = __importDefault(require("multer"));
 const routes_1 = __importDefault(require("./routes"));
 const app = (0, express_1.default)();
+//app.use(cors({
+//  origin: [
+//    "http://localhost:5173",
+//    "http://localhost:3000",
+//    "https://votacao-minas.vercel.app"
+//  ],
+//  credentials: true
+//}))
+app.use((0, cors_1.default)({
+    origin: true,
+    credentials: true
+}));
+app.get("/", (req, res) => {
+    res.json({
+        status: "online",
+        message: "API funcionando"
+    });
+});
 const uploadsDir = path_1.default.join(__dirname, "..", "uploads");
 if (!fs_1.default.existsSync(uploadsDir)) {
     fs_1.default.mkdirSync(uploadsDir, { recursive: true });

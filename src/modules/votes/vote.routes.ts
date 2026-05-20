@@ -9,6 +9,7 @@ router.use(authMiddleware)
 
 router.post("/", controller.vote)
 router.get("/my-votes", controller.myVotes)
+router.get("/my-latest-vote", controller.myLatestVote)
 router.get("/:votingId/results", controller.results)
 
 export default router

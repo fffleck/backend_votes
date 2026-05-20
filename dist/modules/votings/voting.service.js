@@ -35,6 +35,25 @@ class VotingService {
             }
         });
     }
+    async update(id, data) {
+        await this.findById(id);
+        if (data.status && !["draft", "open", "closed"].includes(data.status)) {
+            throw new Error("Invalid status");
+        }
+        if (data.startDate && data.endDate && data.startDate >= data.endDate) {
+            throw new Error("Start date must be before end date");
+        }
+        return prisma_1.prisma.voting.update({
+            where: { id },
+            data: {
+                ...(data.title !== undefined ? { title: data.title } : {}),
+                ...(data.description !== undefined ? { description: data.description } : {}),
+                ...(data.status !== undefined ? { status: data.status } : {}),
+                ...(data.startDate !== undefined ? { startDate: data.startDate } : {}),
+                ...(data.endDate !== undefined ? { endDate: data.endDate } : {})
+            }
+        });
+    }
     async list(role) {
         await this.autoUpdateStatuses();
         if (role === "ADMIN") {

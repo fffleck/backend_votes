@@ -40,6 +40,26 @@ class VotingController {
             return res.status(404).json({ error: err.message });
         }
     }
+    async update(req, res) {
+        try {
+            const id = req.params.id;
+            if (!id || Array.isArray(id)) {
+                return res.status(400).json({ error: "Invalid ID" });
+            }
+            const { title, description, status, startDate, endDate } = req.body;
+            const voting = await service.update(id, {
+                title,
+                description,
+                status,
+                startDate: startDate ? new Date(startDate) : startDate === null ? null : undefined,
+                endDate: endDate ? new Date(endDate) : endDate === null ? null : undefined
+            });
+            return res.json(voting);
+        }
+        catch (err) {
+            return res.status(400).json({ error: err.message });
+        }
+    }
     async open(req, res) {
         try {
             const id = req.params.id;

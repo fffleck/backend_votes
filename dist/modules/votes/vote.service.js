@@ -58,8 +58,36 @@ class VoteService {
         });
     }
     async myVotes(userId) {
-        const votes = await prisma_1.prisma.vote.findMany({ where: { userId }, select: { votingId: true } });
-        return votes.map(v => v.votingId);
+        const votes = await prisma_1.prisma.vote.findMany({
+            where: { userId },
+            select: {
+                id: true,
+                votingId: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: "desc" }
+        });
+        return {
+            votedVotingIds: votes.map(v => v.votingId),
+            latestVote: votes[0]
+                ? {
+                    id: votes[0].id,
+                    votingId: votes[0].votingId,
+                    createdAt: votes[0].createdAt
+                }
+                : null
+        };
+    }
+    async myLatestVote(userId) {
+        return prisma_1.prisma.vote.findFirst({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                createdAt: true,
+                votingId: true
+            }
+        });
     }
     async results(votingId) {
         const votes = await prisma_1.prisma.vote.findMany({
@@ -68,15 +96,28 @@ class VoteService {
         const parsedVotes = votes.map(v => {
             try {
                 const decrypted = JSON.parse((0, crypto_1.decrypt)(v.encryptedVote));
-                return decrypted.answers;
+                return {
+                    answers: decrypted.answers,
+                    createdAt: v.createdAt
+                };
             }
             catch {
                 return null;
             }
         }).filter(Boolean);
+        const timeline = new Map();
+        parsedVotes.forEach(vote => {
+            const hour = new Date(vote.createdAt);
+            hour.setMinutes(0, 0, 0);
+            const key = hour.toISOString();
+            timeline.set(key, (timeline.get(key) || 0) + 1);
+        });
         return {
             totalVotes: parsedVotes.length,
-            votes: parsedVotes
+            votes: parsedVotes.map(vote => vote.answers),
+            voteTimeline: [...timeline.entries()]
+                .map(([hour, count]) => ({ hour, count }))
+                .sort((a, b) => new Date(a.hour).getTime() - new Date(b.hour).getTime())
         };
     }
 }

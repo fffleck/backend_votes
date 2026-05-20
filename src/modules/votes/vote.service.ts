@@ -71,9 +71,39 @@ export class VoteService {
     })
   }
 
-  async myVotes(userId: string): Promise<string[]> {
-    const votes = await prisma.vote.findMany({ where: { userId }, select: { votingId: true } })
-    return votes.map(v => v.votingId)
+  async myVotes(userId: string) {
+    const votes = await prisma.vote.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        votingId: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: "desc" }
+    })
+
+    return {
+      votedVotingIds: votes.map(v => v.votingId),
+      latestVote: votes[0]
+        ? {
+            id: votes[0].id,
+            votingId: votes[0].votingId,
+            createdAt: votes[0].createdAt
+          }
+        : null
+    }
+  }
+
+  async myLatestVote(userId: string) {
+    return prisma.vote.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        createdAt: true,
+        votingId: true
+      }
+    })
   }
 
   async results(votingId: string) {

@@ -17,8 +17,13 @@ class VoteController {
     }
     async myVotes(req, res) {
         const userId = req.user.userId;
-        const votedIds = await service.myVotes(userId);
-        return res.json({ votedVotingIds: votedIds });
+        const result = await service.myVotes(userId);
+        return res.json(result);
+    }
+    async myLatestVote(req, res) {
+        const userId = req.user.userId;
+        const vote = await service.myLatestVote(userId);
+        return res.json({ vote });
     }
     async results(req, res) {
         const votingId = req.params.votingId;

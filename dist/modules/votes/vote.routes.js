@@ -8,5 +8,6 @@ const controller = new vote_controller_1.VoteController();
 router.use(auth_1.authMiddleware);
 router.post("/", controller.vote);
 router.get("/my-votes", controller.myVotes);
+router.get("/my-latest-vote", controller.myLatestVote);
 router.get("/:votingId/results", controller.results);
 exports.default = router;

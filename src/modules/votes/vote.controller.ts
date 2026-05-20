@@ -22,8 +22,14 @@ export class VoteController {
 
   async myVotes(req: Request, res: Response) {
     const userId = (req as any).user.userId
-    const votedIds = await service.myVotes(userId)
-    return res.json({ votedVotingIds: votedIds })
+    const result = await service.myVotes(userId)
+    return res.json(result)
+  }
+
+  async myLatestVote(req: Request, res: Response) {
+    const userId = (req as any).user.userId
+    const vote = await service.myLatestVote(userId)
+    return res.json({ vote })
   }
 
   async results(req: Request, res: Response) {
