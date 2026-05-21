@@ -66,7 +66,7 @@ export class UsersController {
   async sendInvitationsToAllVoters(req: AuthRequest, res: Response) {
     try {
       if (!ensureAdmin(req, res)) return
-      const result = await service.sendInvitationsToAllVoters()
+      const result = service.startInvitationBatch()
       return res.json(result)
     } catch (err: any) {
       return res.status(400).json({ error: err.message })

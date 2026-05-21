@@ -71,7 +71,7 @@ class UsersController {
         try {
             if (!ensureAdmin(req, res))
                 return;
-            const result = await service.sendInvitationsToAllVoters();
+            const result = service.startInvitationBatch();
             return res.json(result);
         }
         catch (err) {

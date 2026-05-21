@@ -4,9 +4,14 @@ exports.UsersService = void 0;
 const prisma_1 = require("../../config/prisma");
 const hash_1 = require("../../providers/hash");
 const invitationEmail_service_1 = require("../emails/invitationEmail.service");
+const EMAIL_BATCH_DELAY_MS = 5000;
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 class UsersService {
     constructor() {
         this.invitationEmailService = new invitationEmail_service_1.InvitationEmailService();
+        this.invitationBatchRunning = false;
     }
     normalizeCpf(cpf) {
         return String(cpf || "").replace(/\D/g, "");
@@ -130,14 +135,16 @@ class UsersService {
             throw new Error("Convite disponível apenas para usuários votantes");
         if (!user.cpf)
             throw new Error("Usuário sem CPF cadastrado");
+        console.log(`[email] Enviando convite para ${user.email}`);
         await this.invitationEmailService.sendInvitation({
             name: user.name,
             email: user.email,
             cpf: user.cpf
         });
+        console.log(`[email] Convite enviado para ${user.email}`);
         return { success: true };
     }
-    async sendInvitationsToAllVoters() {
+    async getInvitationRecipients() {
         const users = await prisma_1.prisma.user.findMany({
             where: {
                 active: true,
@@ -152,31 +159,64 @@ class UsersService {
             },
             orderBy: { name: "asc" }
         });
+        return users;
+    }
+    async sendInvitationsToAllVoters() {
+        const users = await this.getInvitationRecipients();
         const result = {
             total: users.length,
             sent: 0,
             failed: 0,
             failures: []
         };
-        for (const user of users) {
+        console.log(`[email] Iniciando envio de convites para ${users.length} usuários`);
+        for (const [index, user] of users.entries()) {
             try {
+                console.log(`[email] Enviando convite para ${user.email}`);
                 await this.invitationEmailService.sendInvitation({
                     name: user.name,
                     email: user.email,
                     cpf: user.cpf
                 });
                 result.sent++;
+                console.log(`[email] Convite enviado para ${user.email}`);
             }
             catch (error) {
+                const message = error.message || "Erro ao enviar email";
                 result.failed++;
                 result.failures.push({
                     userId: user.id,
                     email: user.email,
-                    error: error.message || "Erro ao enviar email"
+                    error: message
                 });
+                console.error(`[email] Falha ao enviar convite para ${user.email}: ${message}`);
+            }
+            if (index < users.length - 1) {
+                console.log(`[email] Aguardando ${EMAIL_BATCH_DELAY_MS / 1000} segundos antes do próximo envio`);
+                await wait(EMAIL_BATCH_DELAY_MS);
             }
         }
+        console.log(`[email] Envio de convites finalizado. Total: ${result.total}. Enviados: ${result.sent}. Falhas: ${result.failed}.`);
         return result;
+    }
+    startInvitationBatch() {
+        if (this.invitationBatchRunning) {
+            console.log("[email] Envio em massa já está em andamento. Nova solicitação ignorada.");
+            return { success: true, started: false, message: "Envio em massa já está em andamento." };
+        }
+        this.invitationBatchRunning = true;
+        console.log("[email] Envio em massa colocado em segundo plano.");
+        setImmediate(() => {
+            this.sendInvitationsToAllVoters()
+                .catch(error => {
+                console.error("[email] Falha inesperada no envio em massa:", error);
+            })
+                .finally(() => {
+                this.invitationBatchRunning = false;
+                console.log("[email] Processo de envio em massa liberado para nova execução.");
+            });
+        });
+        return { success: true, started: true, message: "Envio de convites iniciado em segundo plano." };
     }
 }
 exports.UsersService = UsersService;
