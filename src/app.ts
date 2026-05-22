@@ -34,6 +34,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
+const downloadsDir = path.join(__dirname, "..", "public", "downloads")
+if (!fs.existsSync(downloadsDir)) {
+  fs.mkdirSync(downloadsDir, { recursive: true })
+}
+
 const storage = multer.diskStorage({
   destination: uploadsDir,
   filename: (_req, file, cb) => {
@@ -54,6 +59,7 @@ const upload = multer({
 app.use(cors())
 app.use(express.json())
 app.use("/uploads", express.static(uploadsDir))
+app.use("/downloads", express.static(downloadsDir))
 
 app.post("/api/upload", upload.single("file"), (req: any, res: any) => {
   if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" })

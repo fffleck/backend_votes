@@ -12,4 +12,5 @@ router.get("/:id", controller.findById);
 router.patch("/:id", controller.update);
 router.post("/:id/open", controller.open);
 router.post("/:id/close", controller.close);
+router.post("/:id/finalize", controller.finalize);
 exports.default = router;

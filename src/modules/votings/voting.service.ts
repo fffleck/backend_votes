@@ -1,6 +1,8 @@
 import { prisma } from "../../config/prisma"
+import { VotingFinalizationService } from "./votingFinalization.service"
 
 export class VotingService {
+  private finalizationService = new VotingFinalizationService()
 
   private async autoUpdateStatuses() {
     const now = new Date()
@@ -15,14 +17,23 @@ export class VotingService {
       data: { status: "open" }
     })
 
-    // open → closed: endDate passou
-    await prisma.voting.updateMany({
+    // open → closed/finalized: endDate passou
+    const expiredVotings = await prisma.voting.findMany({
       where: {
         status: "open",
-        endDate: { lte: now }
+        endDate: { lte: now },
+        finalizedAt: null
       },
-      data: { status: "closed" }
+      select: { id: true }
     })
+
+    for (const voting of expiredVotings) {
+      await this.finalizationService.finalize(voting.id)
+    }
+  }
+
+  async syncScheduledVotings() {
+    await this.autoUpdateStatuses()
   }
 
   async create(data: {
@@ -101,5 +112,11 @@ export class VotingService {
     const voting = await this.findById(id)
     if (voting.status !== "open") throw new Error("Only open votings can be closed")
     return prisma.voting.update({ where: { id }, data: { status: "closed" } })
+  }
+
+  async finalize(id: string) {
+    const voting = await this.findById(id)
+    if (voting.status === "draft") throw new Error("Draft votings cannot be finalized")
+    return this.finalizationService.finalize(id)
   }
 }

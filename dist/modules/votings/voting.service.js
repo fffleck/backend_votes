@@ -2,7 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VotingService = void 0;
 const prisma_1 = require("../../config/prisma");
+const votingFinalization_service_1 = require("./votingFinalization.service");
 class VotingService {
+    constructor() {
+        this.finalizationService = new votingFinalization_service_1.VotingFinalizationService();
+    }
     async autoUpdateStatuses() {
         const now = new Date();
         // draft → open: startDate chegou e ainda não passou o endDate
@@ -14,14 +18,21 @@ class VotingService {
             },
             data: { status: "open" }
         });
-        // open → closed: endDate passou
-        await prisma_1.prisma.voting.updateMany({
+        // open → closed/finalized: endDate passou
+        const expiredVotings = await prisma_1.prisma.voting.findMany({
             where: {
                 status: "open",
-                endDate: { lte: now }
+                endDate: { lte: now },
+                finalizedAt: null
             },
-            data: { status: "closed" }
+            select: { id: true }
         });
+        for (const voting of expiredVotings) {
+            await this.finalizationService.finalize(voting.id);
+        }
+    }
+    async syncScheduledVotings() {
+        await this.autoUpdateStatuses();
     }
     async create(data) {
         return prisma_1.prisma.voting.create({
@@ -81,6 +92,12 @@ class VotingService {
         if (voting.status !== "open")
             throw new Error("Only open votings can be closed");
         return prisma_1.prisma.voting.update({ where: { id }, data: { status: "closed" } });
+    }
+    async finalize(id) {
+        const voting = await this.findById(id);
+        if (voting.status === "draft")
+            throw new Error("Draft votings cannot be finalized");
+        return this.finalizationService.finalize(id);
     }
 }
 exports.VotingService = VotingService;

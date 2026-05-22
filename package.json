@@ -9,6 +9,7 @@
     "seed": "ts-node prisma/seed.ts",
     "import:pre-registered": "ts-node scripts/importPreRegisteredUsers.ts",
     "migrate:pre-registered-to-users": "ts-node scripts/migratePreRegisteredToUsers.ts",
+    "export:not-voted": "ts-node scripts/exportUsersNotVoted.ts",
     "send:invitation-preview": "ts-node scripts/sendInvitationPreview.ts",
     "postinstall": "prisma generate"
   },
@@ -25,7 +26,8 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -34,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "@types/nodemailer": "^8.0.0",
+    "@types/qrcode": "^1.5.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.2"

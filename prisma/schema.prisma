@@ -37,6 +37,9 @@ model Voting {
   createdAt   DateTime  @default(now())
   startDate   DateTime?
   endDate     DateTime?
+  finalizedAt DateTime?
+  resultPdfUrl String?
+  nonVotersPdfUrl String?
 
   steps       VotingStep[]
   votes       Vote[]

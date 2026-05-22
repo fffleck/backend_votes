@@ -32,6 +32,10 @@ const uploadsDir = path_1.default.join(__dirname, "..", "uploads");
 if (!fs_1.default.existsSync(uploadsDir)) {
     fs_1.default.mkdirSync(uploadsDir, { recursive: true });
 }
+const downloadsDir = path_1.default.join(__dirname, "..", "public", "downloads");
+if (!fs_1.default.existsSync(downloadsDir)) {
+    fs_1.default.mkdirSync(downloadsDir, { recursive: true });
+}
 const storage = multer_1.default.diskStorage({
     destination: uploadsDir,
     filename: (_req, file, cb) => {
@@ -52,6 +56,7 @@ const upload = (0, multer_1.default)({
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use("/uploads", express_1.default.static(uploadsDir));
+app.use("/downloads", express_1.default.static(downloadsDir));
 app.post("/api/upload", upload.single("file"), (req, res) => {
     if (!req.file)
         return res.status(400).json({ error: "Nenhum arquivo enviado" });

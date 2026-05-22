@@ -86,5 +86,21 @@ class VotingController {
             return res.status(400).json({ error: err.message });
         }
     }
+    async finalize(req, res) {
+        try {
+            const id = req.params.id;
+            if (!id || Array.isArray(id)) {
+                return res.status(400).json({ error: "Invalid ID" });
+            }
+            if (req.user?.role !== "ADMIN") {
+                return res.status(403).json({ error: "Only admin users can finalize votings" });
+            }
+            const voting = await service.finalize(id);
+            return res.json(voting);
+        }
+        catch (err) {
+            return res.status(400).json({ error: err.message });
+        }
+    }
 }
 exports.VotingController = VotingController;
