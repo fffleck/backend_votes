@@ -12,9 +12,9 @@ export class VotingStepService {
     return prisma.votingStep.create({ data })
   }
 
-  async addOption(stepId: string, label: string, imageUrl?: string) {
+  async addOption(stepId: string, label: string, imageUrl?: string, hideLabel?: boolean) {
     return prisma.votingStepOption.create({
-      data: { stepId, label, imageUrl }
+      data: { stepId, label, imageUrl, hideLabel: !!hideLabel }
     })
   }
 

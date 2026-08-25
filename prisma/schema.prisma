@@ -76,10 +76,11 @@ model VotingStep {
 
 
 model VotingStepOption {
-  id       String  @id @default(uuid())
-  stepId   String
-  label    String
-  imageUrl String?
+  id        String  @id @default(uuid())
+  stepId    String
+  label     String
+  imageUrl  String?
+  hideLabel Boolean @default(false)
 
-  step     VotingStep @relation(fields: [stepId], references: [id])
+  step      VotingStep @relation(fields: [stepId], references: [id])
 }

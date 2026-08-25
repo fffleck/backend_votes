@@ -28,9 +28,9 @@ export class VotingStepController {
   async addOption(req: Request, res: Response) {
     try {
 
-      const { stepId, label, imageUrl } = req.body
+      const { stepId, label, imageUrl, hideLabel } = req.body
 
-      const option = await service.addOption(stepId, label, imageUrl)
+      const option = await service.addOption(stepId, label, imageUrl, hideLabel)
 
       return res.json(option)
 

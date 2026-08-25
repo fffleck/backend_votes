@@ -58,7 +58,8 @@ export class AuthService {
       UPDATE "User" SET cpf = ${normalizedCpf} WHERE id = ${user.id}
     `
 
-    return { ...user, cpf: normalizedCpf }
+    const { passwordHash: _passwordHash, ...safeUser } = user
+    return { ...safeUser, cpf: normalizedCpf }
   }
 
   async login(email: string, password: string) {
@@ -78,6 +79,7 @@ export class AuthService {
     }
 
     const token = await generateToken(user.id)
-    return { user: { ...user, role: user.role }, token }
+    const { passwordHash: _passwordHash, ...safeUser } = user
+    return { user: safeUser, token }
   }
 }
