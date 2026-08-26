@@ -20,7 +20,7 @@ function getInitialPassword(cpf: string | null) {
 }
 
 function getVotingUrl() {
-  return process.env.VOTING_SITE_URL || "http://votacao-minas.vercel.app"
+  return process.env.VOTING_SITE_URL || "https://votacao-sc.vercel.app"
 }
 
 function getMailConfig() {
@@ -68,7 +68,7 @@ export function buildInvitationEmail(recipient: InvitationRecipient) {
     "Recomendamos que o acesso seja realizado com atenção aos dados informados nesta mensagem.",
     "",
     "Atenciosamente,",
-    "Sindicato dos Jornalistas Profissionais de Minas Gerais"
+    "Sindicato dos Profissionais de Jornalismo de Santa Catarina"
   ].join("\n")
 
   const html = `
@@ -119,7 +119,7 @@ export function buildInvitationEmail(recipient: InvitationRecipient) {
 
           <p style="margin:0;font-size:15px;line-height:1.6;">
             Atenciosamente,<br />
-            <strong>Sindicato dos Jornalistas Profissionais de Minas Gerais</strong>
+            <strong>Sindicato dos Profissionais de Jornalismo de Santa Catarina</strong>
           </p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export class InvitationEmailService {
     const { subject, text, html } = buildInvitationEmail(recipient)
 
     await this.transporter().sendMail({
-      from: `"Votação Minas" <${user}>`,
+      from: `"Sindicato dos Profissionais de Jornalismo de Santa Catarina" <${user}>`,
       to: recipient.email,
       subject,
       text,
