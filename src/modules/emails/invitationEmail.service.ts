@@ -1,6 +1,3 @@
-import nodemailer from "nodemailer"
-import SMTPTransport from "nodemailer/lib/smtp-transport"
-
 type InvitationRecipient = {
   name: string
   email: string
@@ -25,14 +22,14 @@ function getVotingUrl() {
 }
 
 function getMailConfig() {
-  const user = process.env.GMAIL_USER || process.env.GMAIL_EMAIL
-  const pass = process.env.GMAIL_PASSWORD || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD
+  const apiKey = process.env.SENDGRID_API_KEY
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER
 
-  if (!user || !pass) {
-    throw new Error("Configure GMAIL_USER e GMAIL_PASSWORD no .env para enviar emails")
+  if (!apiKey || !fromEmail) {
+    throw new Error("Configure SENDGRID_API_KEY e SENDGRID_FROM_EMAIL no .env para enviar emails")
   }
 
-  return { user, pass }
+  return { apiKey, fromEmail }
 }
 
 function escapeHtml(value: string) {
@@ -131,28 +128,33 @@ export function buildInvitationEmail(recipient: InvitationRecipient) {
 }
 
 export class InvitationEmailService {
-  private transporter() {
-    const { user, pass } = getMailConfig()
-
-    return nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      family: 4,
-      auth: { user, pass }
-    } as SMTPTransport.Options)
-  }
-
   async sendInvitation(recipient: InvitationRecipient) {
-    const { user } = getMailConfig()
+    const { apiKey, fromEmail } = getMailConfig()
     const { subject, text, html } = buildInvitationEmail(recipient)
 
-    await this.transporter().sendMail({
-      from: `"Sindicato dos Profissionais de Jornalismo de Santa Catarina" <${user}>`,
-      to: recipient.email,
-      subject,
-      text,
-      html
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: recipient.email }] }],
+        from: {
+          email: fromEmail,
+          name: "Sindicato dos Profissionais de Jornalismo de Santa Catarina"
+        },
+        subject,
+        content: [
+          { type: "text/plain", value: text },
+          { type: "text/html", value: html }
+        ]
+      })
     })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(`Falha ao enviar email via SendGrid (${response.status}): ${errorBody}`)
+    }
   }
 }
