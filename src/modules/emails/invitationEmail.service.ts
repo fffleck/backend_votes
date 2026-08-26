@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer"
+import SMTPTransport from "nodemailer/lib/smtp-transport"
 
 type InvitationRecipient = {
   name: string
@@ -134,9 +135,12 @@ export class InvitationEmailService {
     const { user, pass } = getMailConfig()
 
     return nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      family: 4,
       auth: { user, pass }
-    })
+    } as SMTPTransport.Options)
   }
 
   async sendInvitation(recipient: InvitationRecipient) {
