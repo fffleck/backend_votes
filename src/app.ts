@@ -4,6 +4,7 @@ import path from "path"
 import fs from "fs"
 import multer from "multer"
 import routes from "./routes"
+import { prisma } from "./config/prisma"
 
 const app = express()
 
@@ -39,16 +40,8 @@ if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true })
 }
 
-const storage = multer.diskStorage({
-  destination: uploadsDir,
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-    cb(null, unique + path.extname(file.originalname))
-  }
-})
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith("image/")) cb(null, true)
@@ -61,9 +54,20 @@ app.use(express.json())
 app.use("/uploads", express.static(uploadsDir))
 app.use("/downloads", express.static(downloadsDir))
 
-app.post("/api/upload", upload.single("file"), (req: any, res: any) => {
+app.post("/api/upload", upload.single("file"), async (req: any, res: any) => {
   if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" })
-  return res.json({ url: `/uploads/${req.file.filename}` })
+  const image = await prisma.storedImage.create({
+    data: { data: req.file.buffer, mimeType: req.file.mimetype }
+  })
+  return res.json({ url: `/api/images/${image.id}` })
+})
+
+app.get("/api/images/:id", async (req, res) => {
+  const image = await prisma.storedImage.findUnique({ where: { id: req.params.id } })
+  if (!image) return res.status(404).json({ error: "Imagem não encontrada" })
+  res.setHeader("Content-Type", image.mimeType)
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable")
+  return res.send(image.data)
 })
 
 app.use("/api", routes)

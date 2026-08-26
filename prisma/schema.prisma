@@ -84,3 +84,10 @@ model VotingStepOption {
 
   step      VotingStep @relation(fields: [stepId], references: [id])
 }
+
+model StoredImage {
+  id        String   @id @default(uuid())
+  data      Bytes
+  mimeType  String
+  createdAt DateTime @default(now())
+}
