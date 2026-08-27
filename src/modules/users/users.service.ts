@@ -108,6 +108,54 @@ export class UsersService {
     })
   }
 
+  async update(userId: string, data: { name?: string; email?: string; cpf?: string }) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user || !user.active) throw new Error("Usuário não encontrado")
+
+    const updateData: { name?: string; email?: string; cpf?: string | null } = {}
+
+    if (data.name !== undefined) {
+      const name = String(data.name || "").trim()
+      if (!name) throw new Error("Informe o nome")
+      updateData.name = name
+    }
+
+    if (data.email !== undefined) {
+      const email = String(data.email || "").trim().toLowerCase()
+      if (!email.includes("@")) throw new Error("Informe um email válido")
+
+      const existingByEmail = await prisma.user.findUnique({ where: { email } })
+      if (existingByEmail && existingByEmail.id !== userId) {
+        throw new Error("Já existe usuário com este email")
+      }
+      updateData.email = email
+    }
+
+    if (data.cpf !== undefined) {
+      const cpf = this.normalizeCpf(data.cpf)
+      if (cpf.length !== 11) throw new Error("Informe um CPF válido")
+
+      const existingByCpf = await prisma.user.findUnique({ where: { cpf } })
+      if (existingByCpf && existingByCpf.id !== userId) {
+        throw new Error("Já existe usuário com este CPF")
+      }
+      updateData.cpf = cpf
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        role: true,
+        createdAt: true
+      }
+    })
+  }
+
   async updatePassword(userId: string, password: string) {
     if (!password || password.length < 5) {
       throw new Error("A senha deve ter no mínimo 5 caracteres")

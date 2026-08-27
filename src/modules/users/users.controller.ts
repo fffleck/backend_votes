@@ -38,6 +38,19 @@ export class UsersController {
     return res.json({ success: true })
   }
 
+  async update(req: AuthRequest, res: Response) {
+    try {
+      if (!ensureAdmin(req, res)) return
+      let { userId } = req.params
+      if (Array.isArray(userId)) userId = userId[0]
+      const { name, email, cpf } = req.body
+      const user = await service.update(userId.toString(), { name, email, cpf })
+      return res.json(user)
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message })
+    }
+  }
+
   async updatePassword(req: AuthRequest, res: Response) {
     try {
       if (!ensureAdmin(req, res)) return

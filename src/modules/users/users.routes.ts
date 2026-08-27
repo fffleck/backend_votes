@@ -11,6 +11,7 @@ router.get("/", controller.list)
 router.post("/", controller.create)
 router.post("/invitations/send-all", controller.sendInvitationsToAllVoters)
 router.post("/:userId/invitation", controller.sendInvitation)
+router.patch("/:userId", controller.update)
 router.patch("/:userId/password", controller.updatePassword)
 router.delete("/:userId", controller.deactivate)
 
