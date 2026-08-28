@@ -25,8 +25,8 @@ const PAGE_HEIGHT = 842
 const MARGIN = 48
 const DOWNLOADS_DIR = path.join(__dirname, "..", "..", "..", "public", "downloads")
 const LOGO_PATH = path.join(__dirname, "..", "..", "..", "public", "assets", "logo.jpeg")
-const LOGO_WIDTH = 900
-const LOGO_HEIGHT = 492
+const LOGO_WIDTH = 1536
+const LOGO_HEIGHT = 1024
 const FOOTER_TOP = 112
 const AUDIT_TEXT = "Todo o processo de votação foi auditado pela Empresa FCM Desenvolvimento Ltda, criadora e mantenedora do sistema de votação on-line."
 
@@ -200,6 +200,15 @@ class PdfBuilder {
     this.ensureSpace(12)
     this.content += `0.82 0.82 0.82 RG 1 w ${MARGIN} ${this.y} m ${PAGE_WIDTH - MARGIN} ${this.y} l S\n`
     this.y -= 16
+  }
+
+  signatureBlock(width = 240) {
+    this.ensureSpace(70)
+    this.y -= 20
+    this.content += `[3 3] 0 d 0.35 0.35 0.35 RG 1 w ${MARGIN} ${this.y} m ${MARGIN + width} ${this.y} l S\n[] 0 d\n`
+    this.y -= 18
+    this.line("FCM Desenvolvimento LTDA", 10, true, 15)
+    this.line("Fabio José Fleck - representante legal da empresa", 10, false, 15)
   }
 
   bar(label: string, count: number, total: number, color: string) {
@@ -465,6 +474,8 @@ export class VotingFinalizationService {
       })
       pdf.line("", 5, false, 5)
     })
+
+    pdf.signatureBlock()
 
     return pdf.build()
   }
